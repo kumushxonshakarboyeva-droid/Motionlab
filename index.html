@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b0b12">
 <title>MotionLab — Text Animation Studio</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 :root{
   --bg:#090a10;--surface:#101119;--surface2:#151621;--surface3:#1a1b28;
@@ -42,9 +43,8 @@ textarea{min-height:72px;padding:10px;resize:vertical}input[type=text],select{he
 .row{display:grid;grid-template-columns:1fr 1fr;gap:9px}.field{margin-bottom:12px}.field:last-child{margin-bottom:0}
 .range{display:grid;grid-template-columns:1fr 62px;gap:8px;align-items:center}.range input{width:100%;accent-color:var(--accent)}.value{height:34px;display:grid;place-items:center;background:#11131c;border:1px solid var(--line);border-radius:8px;color:#a9adbd;font-size:10px}
 .color{display:grid;grid-template-columns:44px 1fr;gap:8px}.color input[type=color]{width:44px;height:40px;padding:3px;border:1px solid var(--line);background:#11131c;border-radius:9px}
-.presets{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.preset{min-height:42px;border:1px solid var(--line);background:#11131c;color:#d8dbea;border-radius:10px;font-size:10px;padding:6px}.preset:hover{background:#181a26;border-color:#514578}.preset.active{background:#261b4d;border-color:#795cff;color:#fff;box-shadow:inset 0 0 0 1px #795cff30}
 .upload{border:1px dashed #3a3c4a;border-radius:12px;padding:13px;text-align:center;background:#10121a;color:#8a8fa1;font-size:10px}.upload label{display:inline-block;padding:8px 11px;background:#191b26;border:1px solid var(--line);border-radius:8px;color:#dddff0;cursor:pointer;margin:0}.upload input{display:none}.filename{margin-top:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.quick-row{display:flex;gap:7px;overflow:auto;padding-bottom:2px}.chip{white-space:nowrap;border:1px solid var(--line);background:#11131c;color:#cfd2df;border-radius:999px;padding:7px 10px;font-size:10px}.chip.active{background:#261b4d;border-color:#795cff;color:#fff}
+.quick-row{display:flex;gap:7px;overflow:auto;padding-bottom:2px}.preset-card{flex:0 0 100px;border:1px solid var(--line);background:#11131c;color:#cfd2df;border-radius:10px;padding:8px;font-size:10px;text-align:center}.preset-card.active{background:#261b4d;border-color:#795cff;color:#fff}
 .tg{background:#10121a;border:1px solid var(--line);border-radius:16px;padding:15px}.tg-title{display:flex;align-items:center;gap:8px;font-weight:900;font-size:14px}.tg-badge{font-size:9px;padding:4px 6px;border-radius:6px;background:#241b45;color:#b49cff}.hint{font-size:10px;color:#8a8fa0;line-height:1.45;margin:10px 0 13px}.check{display:flex;align-items:center;gap:8px;font-size:10px;color:#b8bcc9;margin:11px 0}.check input{accent-color:var(--accent)}
 .export{width:100%;height:50px;border:0;border-radius:12px;background:linear-gradient(135deg,#734cff,#b04cff);color:#fff;font-weight:900;margin-top:9px;box-shadow:0 12px 32px #754cff25}.export:hover{filter:brightness(1.08)}
 .export.secondary{background:#171925;border:1px solid var(--line);box-shadow:none;color:#fff}
@@ -54,7 +54,6 @@ textarea{min-height:72px;padding:10px;resize:vertical}input[type=text],select{he
   .app{grid-template-columns:1fr;display:flex;flex-direction:column}
   .sidebar{display:none}
   .panel{position:relative;width:100%;border-left:0;border-top:1px solid var(--line);box-shadow:none;transform:none}
-  .mobile{display:none!important}
 }
 @media(max-width:650px){
   .topbar{height:58px;padding:0 13px}
@@ -74,7 +73,8 @@ textarea{min-height:72px;padding:10px;resize:vertical}input[type=text],select{he
   <button class="side" title="Presets">◈</button>
   <button class="side" title="Fonts">Aa</button>
   <button class="side" title="Projects">□</button>
-  <div class="spacer"></div><button class="side" title="Settings">⚙</button>
+  <div class="spacer"></div>
+  <button class="side" title="Settings">⚙</button>
 </aside>
 
 <main class="workspace">
@@ -109,7 +109,7 @@ textarea{min-height:72px;padding:10px;resize:vertical}input[type=text],select{he
     <div><label>Canvas</label><select id="size"><option>512 × 512</option><option>100 × 100</option></select></div>
     <div><label>FPS</label><select id="fps"><option>24 FPS</option><option selected>30 FPS</option><option>60 FPS</option></select></div>
   </div>
-  <label class="check"><input type="checkbox" id="loopPreview"> Loop preview</label>
+  <label class="check"><input type="checkbox" id="loopPreview" checked> Loop preview</label>
 </section>
 
 <section class="section">
@@ -152,15 +152,18 @@ textarea{min-height:72px;padding:10px;resize:vertical}input[type=text],select{he
   <div class="section-head">Telegram Export <span>V4</span></div>
   <div class="tg">
     <div class="tg-title">Telegram Export <span class="tg-badge">V4</span></div>
-    <div class="hint">Transparent WebM uses VP9/alpha when your browser supports it. 512×512 is used for animated stickers; 100×100 is used for emoji.</div>
+    <div class="hint">512×512 is used for animated stickers; 100×100 is used for emoji. Maximum duration is 3 seconds.</div>
     <div class="row">
       <select id="transparency"><option>Transparent</option><option>Background</option></select>
-      <select id="tgType"><option selected>Telegram Sticker</option><option>Emoji</option><option>Standard WebM</option></select>
+      <select id="tgType"><option selected>Telegram Sticker</option><option>Emoji</option></select>
     </div>
     <label class="check"><input type="checkbox" id="fit" checked> Fit text inside sticker canvas</label>
-    <div class="row"><button class="btn" id="check">✓ Check</button><button class="btn" id="tgPreview">▶ Preview</button></div>
-    <button class="export" id="tgExport">↓ Export Telegram WebM</button>
-    <button class="export secondary" id="webmExport">↓ Export WebM</button>
+    <div class="row" style="margin-bottom:8px">
+      <button class="btn" id="check">✓ Check</button>
+      <button class="btn" id="tgPreview">▶ Preview</button>
+    </div>
+    <button class="export" id="tgSendDirect">✨ Botga yuborish (Sticker Yaratish)</button>
+    <button class="export secondary" id="webmExport">↓ WebM yuklab olish</button>
   </div>
 </section>
 </aside>
@@ -168,6 +171,12 @@ textarea{min-height:72px;padding:10px;resize:vertical}input[type=text],select{he
 <div class="status" id="status"></div>
 
 <script>
+const tg = window.Telegram?.WebApp;
+if (tg) {
+  tg.ready();
+  tg.expand();
+}
+
 const $=id=>document.getElementById(id);
 const effects=[
   ["✨","Pop","pop"],["🌊","Slide","slide"],["💎","Neon","neon"],["⚡","Glitch","glitch"],
@@ -177,21 +186,21 @@ const effects=[
 ];
 const fonts=["Inter","Arial","Georgia","Courier New","Trebuchet MS","Verdana"];
 let state={text:"Hello World",size:"512 × 512",fps:"30 FPS",font:"Inter",fontSize:80,weight:800,spacing:-4,duration:2.5,delay:0,direction:"Normal",easing:"Ease In Out",textColor:"#ffffff",bgColor:"#090a10",effect:"pop",transparent:true,fit:true};
-let customFonts=[]; let raf=null; let playing=false;
+let customFonts=[];
 
-function status(msg){$("status").textContent=msg;$("status").classList.add("show");clearTimeout(status.t);status.t=setTimeout(()=>$("status").classList.remove("show"),1800)}
+function status(msg){$("status").textContent=msg;$("status").classList.add("show");clearTimeout(status.t);status.t=setTimeout(()=>$("status").classList.remove("show"),2000)}
 function set(id,v){$(id).value=v}
-function populateFonts(){ $("font").innerHTML=[...fonts,...customFonts.map(x=>x.family)].map(x=>`<option>${x}</option>`).join("");$("font").value=state.font}
+function populateFonts(){$("font").innerHTML=[...fonts,...customFonts.map(x=>x.family)].map(x=>`<option>${x}</option>`).join("");$("font").value=state.font}
+
 function renderQuick(){
  $("quick").innerHTML=effects.map(e=>{
    const k=keyframes(e[2]);
    const frames=Array.isArray(k)?k.join(""):k;
    const safe=e[2].replace(/[^a-z0-9_-]/gi,"");
-   return `<button class="preset-card ${state.effect===e[2]?"active":""}" data-effect="${e[2]}" aria-label="${e[1]} animation preset">
-     <span class="preset-preview"><span class="preset-live">LIVE</span><span class="preset-sample" style="animation:preset_${safe} 1.8s ease-in-out infinite both">${e[0]} Aa</span></span>
-     <span class="preset-name"><span class="preset-icon">${e[0]}</span>${e[1]}</span>
-   </button>
-   <style>@keyframes preset_${safe}{${frames}}</style>`;
+   return `<button class="preset-card ${state.effect===e[2]?"active":""}" data-effect="${e[2]}">
+     <div>${e[0]} ${e[1]}</div>
+     <style>@keyframes preset_${safe}{${frames}}</style>
+   </button>`;
  }).join("");
  document.querySelectorAll("[data-effect]").forEach(b=>b.onclick=()=>{
    state.effect=b.dataset.effect;
@@ -199,6 +208,7 @@ function renderQuick(){
    apply();
  });
 }
+
 function syncUI(){
  set("text",state.text);set("size",state.size);set("fps",state.fps);set("font",state.font);set("fontSize",state.fontSize);set("weight",state.weight);set("spacing",state.spacing);
  set("duration",state.duration);set("delay",state.delay);set("direction",state.direction);set("easing",state.easing);set("textColor",state.textColor);set("textHex",state.textColor.toUpperCase());set("bgColor",state.bgColor);set("bgHex",state.bgColor.toUpperCase());
@@ -206,7 +216,9 @@ function syncUI(){
  $("fontSizeV").textContent=state.fontSize+"px";$("spacingV").textContent=state.spacing+"px";$("durationV").textContent=state.duration+"s";$("delayV").textContent=state.delay+"s";
  $("stageLabel").textContent=state.size+" • "+state.fps;renderQuick();apply();
 }
+
 function easing(v){return {"Ease In Out":"ease-in-out","Ease":"ease","Linear":"linear","Ease In":"ease-in","Ease Out":"ease-out","Elastic":"cubic-bezier(.34,1.56,.64,1)"}[v]||"ease-in-out"}
+
 function keyframes(effect){
 const K={
 pop:["0%,100%{transform:scale(.72);opacity:0}45%,65%{transform:scale(1.05);opacity:1}"],
@@ -227,6 +239,7 @@ spotlight:["0%{filter:brightness(.55)}50%{filter:brightness(1.5)}100%{filter:bri
 breathe:["0%,100%{transform:scale(1);letter-spacing:-.05em}50%{transform:scale(1.04);letter-spacing:0}"]
 }; return K[effect]||K.pop;
 }
+
 function apply(){
 const t=$("previewText");t.textContent=state.text||" ";t.style.fontFamily=`"${state.font}",system-ui,sans-serif`;t.style.fontSize=state.fontSize+"px";t.style.fontWeight=state.weight;t.style.letterSpacing=state.spacing+"px";t.style.color=state.textColor;
 $("previewCard").style.background=state.transparent?`radial-gradient(circle at 50% 45%,#1b1d2b 0,#10121b 42%,#090a10 100%)`:state.bgColor;
@@ -237,36 +250,161 @@ const styleId="motion-dynamic";document.getElementById(styleId)?.remove();const 
 s.textContent=`@keyframes motionEffect{${keyframes(state.effect).join?keyframes(state.effect).join(""):keyframes(state.effect)}} #previewText.motion{animation:motionEffect ${state.duration}s ${easing(state.easing)} ${state.delay}s ${state.direction==="Alternate"?"alternate":state.direction==="Alternate Reverse"?"alternate-reverse":state.direction==="Reverse"?"reverse":"normal"} ${$("loopPreview").checked?"infinite":"1"} both}`;
 document.head.appendChild(s);t.classList.add("motion");
 }
+
 function bind(id,key,transform=x=>x){$(id).addEventListener("input",e=>{state[key]=transform(e.target.value);syncUI()});$(id).addEventListener("change",e=>{state[key]=transform(e.target.value);syncUI()})}
 bind("text","text");bind("size","size");bind("fps","fps");bind("font","font");bind("fontSize","fontSize",Number);bind("weight","weight",Number);bind("spacing","spacing",Number);bind("duration","duration",Number);bind("delay","delay",Number);bind("direction","direction");bind("easing","easing");
+
 function colorBind(color,hex,key){$(color).oninput=()=>{state[key]=$(color).value;$(hex).value=state[key].toUpperCase();apply()};$(hex).onchange=()=>{let v=$(hex).value.trim();if(/^#[0-9a-f]{6}$/i.test(v)){state[key]=v;$(color).value=v;apply()}else status("Use a 6-digit HEX color")}}
 colorBind("textColor","textHex","textColor");colorBind("bgColor","bgHex","bgColor");
+
 $("loopPreview").onchange=apply;
 $("fontFile").onchange=async e=>{const f=e.target.files[0];if(!f)return;const family="Custom_"+Date.now();const url=URL.createObjectURL(f);const ff=new FontFace(family,`url(${url})`);try{await ff.load();document.fonts.add(ff);customFonts.push({family,name:f.name});state.font=family;populateFonts();$("fontName").textContent=f.name;apply();status("Font loaded ✓")}catch{status("Font could not be loaded")}};
-$("play").onclick=()=>{const t=$("previewText");t.classList.remove("motion");void t.offsetWidth;t.classList.add("motion");playing=true;$("play").textContent="❚❚";setTimeout(()=>{playing=false;$("play").textContent="▶"},state.duration*1000)};
+$("play").onclick=()=>{const t=$("previewText");t.classList.remove("motion");void t.offsetWidth;t.classList.add("motion");$("play").textContent="❚❚";setTimeout(()=>{$("play").textContent="▶"},state.duration*1000)};
 $("scrub").oninput=e=>{$("time").textContent=((e.target.value/1000)*state.duration).toFixed(1)+"s / "+state.duration+"s"};
 $("reset").onclick=()=>{state={text:"Hello World",size:"512 × 512",fps:"30 FPS",font:"Inter",fontSize:80,weight:800,spacing:-4,duration:2.5,delay:0,direction:"Normal",easing:"Ease In Out",textColor:"#ffffff",bgColor:"#090a10",effect:"pop",transparent:true,fit:true};$("fontName").textContent="No custom font selected";syncUI();status("Reset ✓")};
 $("fit").onchange=e=>{state.fit=e.target.checked;apply()};$("transparency").onchange=e=>{state.transparent=e.target.value==="Transparent";apply()};
-$("check").onclick=()=>{let msg=[];if($("tgType").value==="Telegram Sticker"&&state.size!=="512 × 512")msg.push("sticker will be exported at 512×512");if($("tgType").value==="Emoji"&&state.size!=="100 × 100")msg.push("emoji will be exported at 100×100");if(state.duration>3)msg.push("duration will be limited to 3s");status(msg.length?"⚠ "+msg.join(" • "):"✓ Ready for Telegram")};
-$("tgPreview").onclick=()=>{$("play").click();status("Telegram preview ready ✓")};
+$("check").onclick=()=>{let msg=[];if($("tgType").value==="Telegram Sticker"&&state.size!=="512 × 512")msg.push("sticker size: 512×512");if($("tgType").value==="Emoji"&&state.size!=="100 × 100")msg.push("emoji size: 100×100");if(state.duration>3)msg.push("duration limited to 3s");status(msg.length?"⚠ "+msg.join(" • "):"✓ Ready for Telegram")};
+$("tgPreview").onclick=()=>{$("play").click();status("Preview active ✓")};
 
-async function exportWebM(telegram=false){
-const tgMode=$("tgType").value;
-const w=telegram?(tgMode==="Emoji"?100:512):parseInt(state.size);
-const h=w;const canvas=document.createElement("canvas");canvas.width=w;canvas.height=h;const ctx=canvas.getContext("2d");const fps=parseInt(state.fps);const duration=telegram?Math.min(state.duration,3):state.duration;
-if(!window.MediaRecorder){status("WebM export is not supported in this browser");return}
-const stream=canvas.captureStream(fps);let mime="video/webm;codecs=vp9";if(!MediaRecorder.isTypeSupported(mime))mime="video/webm";const rec=new MediaRecorder(stream,{mimeType:mime});const chunks=[];rec.ondataavailable=e=>e.data.size&&chunks.push(e.data);rec.onstop=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(chunks,{type:mime}));a.download=telegram?"motionlab-telegram.webm":"motionlab.webm";a.click();status(telegram?"Telegram WebM exported ✓":"WebM exported ✓")};
-rec.start();const start=performance.now();
-function draw(now){const p=Math.min((now-start)/1000/duration,1);ctx.clearRect(0,0,w,h);if(!state.transparent){ctx.fillStyle=state.bgColor;ctx.fillRect(0,0,w,h)}
-ctx.save();ctx.translate(w/2,h/2);ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillStyle=state.textColor;ctx.font=`${state.weight} ${Math.min(state.fontSize,w*.16)}px "${state.font}",Arial,sans-serif`;
-let x=0,y=0,alpha=1,scale=1;
-switch(state.effect){case"pop":scale=.72+.33*Math.sin(Math.min(p*2,1)*Math.PI);alpha=Math.min(p*5,1);break;case"slide":x=(p<.3?-w*.18*(1-p/.3):p>.7?w*.18*((p-.7)/.3):0);alpha=p<.3?p/.3:p>.7?(1-p)/.3:1;break;case"heart":scale=1+.13*Math.max(0,Math.sin(p*Math.PI*4));break;case"blur":alpha=Math.sin(Math.min(p,1)*Math.PI);break;case"neon":alpha=.75+.25*Math.sin(p*Math.PI*2);break;case"threeD":ctx.shadowColor="#7c4dff";ctx.shadowBlur=22;break;case"ghost":alpha=.25+.75*Math.sin(p*Math.PI);break;case"reveal":ctx.globalAlpha=p<.25?p/.25:p>.75?(1-p)/.25:1;break}
-ctx.globalAlpha=alpha;ctx.scale(scale,scale);ctx.fillText(state.text||" ",x,y);ctx.restore();
-if(p<1)requestAnimationFrame(draw);else rec.stop()}requestAnimationFrame(draw);
+// Botga avtomatik stiker/emoji yuborish funksiyasi
+async function sendStickerToBot(){
+  status("Stiker tayyorlanmoqda...");
+  const tgMode=$("tgType").value;
+  const w=tgMode==="Emoji"?100:512;
+  const h=w;
+  const canvas=document.createElement("canvas");canvas.width=w;canvas.height=h;
+  const ctx=canvas.getContext("2d");
+  const fps=parseInt(state.fps);
+  const duration=Math.min(state.duration,3);
+
+  if(!window.MediaRecorder){status("MediaRecorder ishlamadi");return}
+
+  const stream=canvas.captureStream(fps);
+  let mime="video/webm;codecs=vp9";
+  if(!MediaRecorder.isTypeSupported(mime))mime="video/webm";
+
+  const rec=new MediaRecorder(stream,{mimeType:mime});
+  const chunks=[];
+  rec.ondataavailable=e=>e.data.size&&chunks.push(e.data);
+  rec.onstop=async()=>{
+    const blob=new Blob(chunks,{type:mime});
+    const reader=new FileReader();
+    reader.readAsDataURL(blob);
+    reader.onloadend=()=>{
+      const base64Data=reader.result;
+      if(tg&&tg.initData){
+        tg.sendData(JSON.stringify({
+          action:"create_sticker",
+          type:tgMode,
+          emoji:"✨",
+          fileData:base64Data
+        }));
+        status("Botga yuborildi! ✓");
+        tg.close();
+      }else{
+        status("Telegram muhiti topilmadi");
+      }
+    };
+  };
+
+  rec.start();
+  const start=performance.now();
+
+  function draw(now){
+    const p=Math.min((now-start)/1000/duration,1);
+    ctx.clearRect(0,0,w,h);
+    if(!state.transparent){ctx.fillStyle=state.bgColor;ctx.fillRect(0,0,w,h)}
+    ctx.save();
+    ctx.translate(w/2,h/2);
+    ctx.textAlign="center";
+    ctx.textBaseline="middle";
+    ctx.fillStyle=state.textColor;
+    ctx.font=`${state.weight} ${Math.min(state.fontSize,w*.16)}px "${state.font}",Arial,sans-serif`;
+
+    let x=0,y=0,alpha=1,scale=1;
+    switch(state.effect){
+      case"pop":scale=.72+.33*Math.sin(Math.min(p*2,1)*Math.PI);alpha=Math.min(p*5,1);break;
+      case"slide":x=(p<.3?-w*.18*(1-p/.3):p>.7?w*.18*((p-.7)/.3):0);alpha=p<.3?p/.3:p>.7?(1-p)/.3:1;break;
+      case"heart":scale=1+.13*Math.max(0,Math.sin(p*Math.PI*4));break;
+      case"blur":alpha=Math.sin(Math.min(p,1)*Math.PI);break;
+      case"neon":alpha=.75+.25*Math.sin(p*Math.PI*2);break;
+      case"ghost":alpha=.25+.75*Math.sin(p*Math.PI);break;
+    }
+
+    ctx.globalAlpha=alpha;
+    ctx.scale(scale,scale);
+    ctx.fillText(state.text||" ",x,y);
+    ctx.restore();
+
+    if(p<1)requestAnimationFrame(draw);else rec.stop();
+  }
+  requestAnimationFrame(draw);
 }
-$("tgExport").onclick=()=>exportWebM(true);$("webmExport").onclick=()=>exportWebM(false);
 
-populateFonts();syncUI();
+// Lokal kompyuter/brauzerga WebM yuklab olish funksiyasi
+async function exportWebM(){
+  const tgMode=$("tgType").value;
+  const w=tgMode==="Emoji"?100:512;
+  const h=w;
+  const canvas=document.createElement("canvas");canvas.width=w;canvas.height=h;
+  const ctx=canvas.getContext("2d");
+  const fps=parseInt(state.fps);
+  const duration=Math.min(state.duration,3);
+
+  const stream=canvas.captureStream(fps);
+  let mime="video/webm;codecs=vp9";
+  if(!MediaRecorder.isTypeSupported(mime))mime="video/webm";
+
+  const rec=new MediaRecorder(stream,{mimeType:mime});
+  const chunks=[];
+  rec.ondataavailable=e=>e.data.size&&chunks.push(e.data);
+  rec.onstop=()=>{
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(new Blob(chunks,{type:mime}));
+    a.download="motionlab.webm";
+    a.click();
+    status("WebM yuklab olindi ✓");
+  };
+
+  rec.start();
+  const start=performance.now();
+
+  function draw(now){
+    const p=Math.min((now-start)/1000/duration,1);
+    ctx.clearRect(0,0,w,h);
+    if(!state.transparent){ctx.fillStyle=state.bgColor;ctx.fillRect(0,0,w,h)}
+    ctx.save();
+    ctx.translate(w/2,h/2);
+    ctx.textAlign="center";
+    ctx.textBaseline="middle";
+    ctx.fillStyle=state.textColor;
+    ctx.font=`${state.weight} ${Math.min(state.fontSize,w*.16)}px "${state.font}",Arial,sans-serif`;
+
+    let x=0,y=0,alpha=1,scale=1;
+    switch(state.effect){
+      case"pop":scale=.72+.33*Math.sin(Math.min(p*2,1)*Math.PI);alpha=Math.min(p*5,1);break;
+      case"slide":x=(p<.3?-w*.18*(1-p/.3):p>.7?w*.18*((p-.7)/.3):0);alpha=p<.3?p/.3:p>.7?(1-p)/.3:1;break;
+      case"heart":scale=1+.13*Math.max(0,Math.sin(p*Math.PI*4));break;
+      case"blur":alpha=Math.sin(Math.min(p,1)*Math.PI);break;
+      case"neon":alpha=.75+.25*Math.sin(p*Math.PI*2);break;
+      case"ghost":alpha=.25+.75*Math.sin(p*Math.PI);break;
+    }
+
+    ctx.globalAlpha=alpha;
+    ctx.scale(scale,scale);
+    ctx.fillText(state.text||" ",x,y);
+    ctx.restore();
+
+    if(p<1)requestAnimationFrame(draw);else rec.stop();
+  }
+  requestAnimationFrame(draw);
+}
+
+$("tgSendDirect").onclick=sendStickerToBot;
+$("webmExport").onclick=exportWebM;
+
+populateFonts();
+syncUI();
 </script>
 </body>
 </html>
