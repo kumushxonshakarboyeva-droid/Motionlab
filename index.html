@@ -49,9 +49,21 @@ textarea{min-height:72px;padding:10px;resize:vertical}input[type=text],select{he
 .export{width:100%;height:50px;border:0;border-radius:12px;background:linear-gradient(135deg,#734cff,#b04cff);color:#fff;font-weight:900;margin-top:9px;box-shadow:0 12px 32px #754cff25}.export:hover{filter:brightness(1.08)}
 .export.secondary{background:#171925;border:1px solid var(--line);box-shadow:none;color:#fff}
 .status{position:fixed;left:50%;bottom:18px;transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;background:#171925;border:1px solid #343747;border-radius:999px;padding:9px 14px;color:#dddff0;font-size:11px;transition:.2s;z-index:50}.status.show{opacity:1;transform:translateX(-50%) translateY(0)}
-@media(max-width:1050px){.app{grid-template-columns:58px minmax(0,1fr)}.panel{position:fixed;right:0;top:0;bottom:0;width:min(390px,94vw);z-index:20;transform:translateX(100%);transition:.25s;box-shadow:-20px 0 60px #0009}.panel.open{transform:translateX(0)}.mobile{display:block!important}}
-@media(min-width:1051px){.mobile{display:none!important}}
-@media(max-width:650px){.app{display:block}.sidebar{display:none}.topbar{height:58px;padding:0 13px}.canvas-wrap{padding:10px}.preview-card{min-height:55vh;height:55vh;border-radius:15px}.stage{width:82%}.panel{width:94vw}.quick-row{display:flex;grid-template-columns:none;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity;padding-bottom:5px}.preset-card{flex:0 0 112px;scroll-snap-align:start}}
+
+@media(max-width:1050px){
+  .app{grid-template-columns:1fr;display:flex;flex-direction:column}
+  .sidebar{display:none}
+  .panel{position:relative;width:100%;border-left:0;border-top:1px solid var(--line);box-shadow:none;transform:none}
+  .mobile{display:none!important}
+}
+@media(max-width:650px){
+  .topbar{height:58px;padding:0 13px}
+  .canvas-wrap{padding:10px;overflow:visible}
+  .preview-card{min-height:280px;height:280px;border-radius:15px;position:relative}
+  .stage{width:82%}
+  .quick-row{display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity;padding-bottom:5px}
+  .preset-card{flex:0 0 112px;scroll-snap-align:start}
+}
 </style>
 </head>
 <body>
@@ -68,7 +80,7 @@ textarea{min-height:72px;padding:10px;resize:vertical}input[type=text],select{he
 <main class="workspace">
 <header class="topbar">
   <div class="brand"><b>MotionLab</b><span class="version">V4</span></div>
-  <div class="actions"><button class="btn" id="reset">Reset</button><button class="btn mobile" id="openPanel">☰</button></div>
+  <div class="actions"><button class="btn" id="reset">Reset</button></div>
 </header>
 
 <div class="canvas-wrap">
@@ -85,7 +97,7 @@ textarea{min-height:72px;padding:10px;resize:vertical}input[type=text],select{he
 </div>
 </main>
 
-<aside class="panel open" id="panel">
+<aside class="panel" id="panel">
 <section class="section">
   <div class="section-head">Text <span>CONTENT</span></div>
   <textarea id="text">Hello World</textarea>
@@ -132,7 +144,7 @@ textarea{min-height:72px;padding:10px;resize:vertical}input[type=text],select{he
   <div class="section-head">Colors <span>STYLE</span></div>
   <div class="row">
     <div><label>Text</label><div class="color"><input type="color" id="textColor" value="#ffffff"><input type="text" id="textHex" value="#FFFFFF"></div></div>
-    <div><label>Background</label><div class="color"><input type="color" id="bgColor" value="#090A10"><input type="text" id="bgHex" value="#090A10"></div></div>
+    <div><label>Background</label><div class="color"><input type="color" id="bgColor" value="#090a10"><input type="text" id="bgHex" value="#090A10"></div></div>
   </div>
 </section>
 
@@ -151,8 +163,6 @@ textarea{min-height:72px;padding:10px;resize:vertical}input[type=text],select{he
     <button class="export secondary" id="webmExport">↓ Export WebM</button>
   </div>
 </section>
-
-
 </aside>
 </div>
 <div class="status" id="status"></div>
@@ -236,7 +246,6 @@ $("fontFile").onchange=async e=>{const f=e.target.files[0];if(!f)return;const fa
 $("play").onclick=()=>{const t=$("previewText");t.classList.remove("motion");void t.offsetWidth;t.classList.add("motion");playing=true;$("play").textContent="❚❚";setTimeout(()=>{playing=false;$("play").textContent="▶"},state.duration*1000)};
 $("scrub").oninput=e=>{$("time").textContent=((e.target.value/1000)*state.duration).toFixed(1)+"s / "+state.duration+"s"};
 $("reset").onclick=()=>{state={text:"Hello World",size:"512 × 512",fps:"30 FPS",font:"Inter",fontSize:80,weight:800,spacing:-4,duration:2.5,delay:0,direction:"Normal",easing:"Ease In Out",textColor:"#ffffff",bgColor:"#090a10",effect:"pop",transparent:true,fit:true};$("fontName").textContent="No custom font selected";syncUI();status("Reset ✓")};
-$("openPanel").onclick=()=>$("panel").classList.toggle("open");
 $("fit").onchange=e=>{state.fit=e.target.checked;apply()};$("transparency").onchange=e=>{state.transparent=e.target.value==="Transparent";apply()};
 $("check").onclick=()=>{let msg=[];if($("tgType").value==="Telegram Sticker"&&state.size!=="512 × 512")msg.push("sticker will be exported at 512×512");if($("tgType").value==="Emoji"&&state.size!=="100 × 100")msg.push("emoji will be exported at 100×100");if(state.duration>3)msg.push("duration will be limited to 3s");status(msg.length?"⚠ "+msg.join(" • "):"✓ Ready for Telegram")};
 $("tgPreview").onclick=()=>{$("play").click();status("Telegram preview ready ✓")};
@@ -256,9 +265,6 @@ ctx.globalAlpha=alpha;ctx.scale(scale,scale);ctx.fillText(state.text||" ",x,y);c
 if(p<1)requestAnimationFrame(draw);else rec.stop()}requestAnimationFrame(draw);
 }
 $("tgExport").onclick=()=>exportWebM(true);$("webmExport").onclick=()=>exportWebM(false);
-
-
-
 
 populateFonts();syncUI();
 </script>
